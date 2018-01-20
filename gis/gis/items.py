@@ -10,4 +10,14 @@ import scrapy
 
 class CatItem(scrapy.Item):
     id = scrapy.Field(serializer=int)
-    name = scrapy.Field(serializer=str)
+    name = scrapy.Field()
+
+
+class OrgItem(scrapy.Item):
+    name = scrapy.Field()
+    address = scrapy.Field()
+    lat = scrapy.Field()
+    lon = scrapy.Field()
+    email = scrapy.Field()
+    email2 = scrapy.Field()
+    email3 = scrapy.Field()
