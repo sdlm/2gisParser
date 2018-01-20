@@ -5,6 +5,3 @@ scrapy crawl cat --nolog -o categories.json
 
 для получения списка организаций
 scrapy crawl org --nolog -a cat=categories.json -o organizations.json
-
-для удаления дублей
-./drop_dub.py -f organizations.json

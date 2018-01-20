@@ -17,6 +17,10 @@ URL_TEMPLATE = 'https://catalog.api.2gis.ru/2.0/catalog/branch/list' \
 class OrgSpider(Spider):
     name = 'org'
 
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
+        self.fingerprints = set()
+
     def start_requests(self):
         cat_file = getattr(self, 'cat', None)
         if cat_file is None:
@@ -35,12 +39,17 @@ class OrgSpider(Spider):
                 if contact.get('type') == 'email':
                     emails.append(contact.get('value'))
             if emails:
-                yield OrgItem(
-                    name=item.get('name'),
-                    address=item.get('address_name'),
-                    lat=item.get('point', {}).get('lat'),
-                    lon=item.get('point', {}).get('lon'),
-                    email=emails[0] if len(emails) > 0 else None,
-                    email2=emails[1] if len(emails) > 1 else None,
-                    email3=emails[2] if len(emails) > 2 else None,
-                )
+                name = item.get('name')
+                address = item.get('address_name')
+                fingerprint = f'{name}#{address}'
+                if fingerprint not in self.fingerprints:
+                    self.fingerprints.add(fingerprint)
+                    yield OrgItem(
+                        name=name,
+                        address=address,
+                        lat=item.get('point', {}).get('lat'),
+                        lon=item.get('point', {}).get('lon'),
+                        email=emails[0] if len(emails) > 0 else None,
+                        email2=emails[1] if len(emails) > 1 else None,
+                        email3=emails[2] if len(emails) > 2 else None,
+                    )
