@@ -5,15 +5,19 @@ from gis.items import OrgItem
 
 
 # noinspection SpellCheckingInspection
+START_URL_TEMPLATE = 'https://catalog.api.2gis.ru/3.0/rubricator/list' \
+                     '?locale=ru_RU&region_id={region_id}&key=rutnpt3272'
+
+# noinspection SpellCheckingInspection
 CAT_URL_TEMPLATE = 'https://catalog.api.2gis.ru/3.0/rubricator/list' \
-                   '?parent_id={parent_id}&locale=ru_RU&region_id=5&key=rutnpt3272'
+                   '?parent_id={parent_id}&locale=ru_RU&region_id={region_id}&key=rutnpt3272'
 
 # noinspection SpellCheckingInspection
 ORG_URL_TEMPLATE = 'https://catalog.api.2gis.ru/2.0/catalog/branch/list' \
                    '?page=1' \
                    '&page_size=50' \
                    '&rubric_id={rubric_id}' \
-                   '&region_id=5' \
+                   '&region_id={region_id}' \
                    '&locale=ru_RU' \
                    '&fields=items.contact_groups%2Citems.point' \
                    '&key=rutnpt3272'
@@ -21,13 +25,19 @@ ORG_URL_TEMPLATE = 'https://catalog.api.2gis.ru/2.0/catalog/branch/list' \
 
 class OrganizationsSpider(Spider):
     name = 'organizations'
-    start_urls = [
-        'https://catalog.api.2gis.ru/3.0/rubricator/list?locale=ru_RU&region_id=5&key=rutnpt3272',
-    ]
 
-    def __init__(self, *arg, **kwargs):
+    def __init__(self, region_id=None, *arg, **kwargs):
         super().__init__(*arg, **kwargs)
         self.fingerprints = set()
+
+        # setup region_id
+        if region_id is None:
+            print('-' * 45)
+            print('| CRITICAL: argument region_id is required! |')
+            print('-' * 45)
+            raise Exception('argument region_id is required!')
+        self.region_id = region_id
+        self.start_urls = [START_URL_TEMPLATE.format(region_id=region_id)]
 
     def parse(self, response):
         data = json.loads(response.text)
@@ -37,8 +47,9 @@ class OrganizationsSpider(Spider):
             uid = item.get('id')
             name = item.get('name')
             if uid is not None and name is not None:
-                yield Request(url=CAT_URL_TEMPLATE.format(parent_id=uid))
-                yield Request(url=ORG_URL_TEMPLATE.format(rubric_id=uid), callback=self.parse_category)
+                yield Request(url=CAT_URL_TEMPLATE.format(parent_id=uid, region_id=self.region_id))
+                yield Request(url=ORG_URL_TEMPLATE.format(rubric_id=uid, region_id=self.region_id),
+                              callback=self.parse_category)
 
     def parse_category(self, response):
         data = json.loads(response.text)
