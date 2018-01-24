@@ -1,7 +1,10 @@
 # 2gis API грабер
 
 для получения списка организаций
-scrapy crawl organizations --nolog -a region_id=5 -o result_of_region_5.json
+> scrapy crawl organizations --nolog -a region_id=5 -o result_of_region_5.json
+
+для конвертации в Excel
+> json_to_xlsx.py result_of_region_5.json
 
 region_id:
 1 - Новосибирск

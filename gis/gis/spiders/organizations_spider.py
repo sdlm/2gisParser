@@ -19,7 +19,7 @@ ORG_URL_TEMPLATE = 'https://catalog.api.2gis.ru/2.0/catalog/branch/list' \
                    '&rubric_id={rubric_id}' \
                    '&region_id={region_id}' \
                    '&locale=ru_RU' \
-                   '&fields=items.contact_groups%2Citems.point' \
+                   '&fields=items.contact_groups%2Citems.rubrics%2Citems.point' \
                    '&key=rutnpt3272'
 
 
@@ -56,26 +56,28 @@ class OrganizationsSpider(Spider):
         if data['meta']['code'] == 404:
             return
         for item in data['result']['items']:
-            emails = list()
+            email = None
             if len(item.get('contact_groups', [])) == 0:
                 return
             for contact in item.get('contact_groups', [{}])[0].get('contacts', []):
                 if contact.get('type') == 'email':
-                    emails.append(contact.get('value'))
-            if emails:
-                name = item.get('name')
-                address = item.get('address_name')
-                fingerprint = f'{name}#{address}'
-                if fingerprint not in self.fingerprints:
-                    self.fingerprints.add(fingerprint)
-                    point = item.get('point', {})
-                    point = point if point is not None else {}
-                    yield OrgItem(
-                        name=name,
-                        address=address,
-                        lat=point.get('lat'),
-                        lon=point.get('lon'),
-                        email=emails[0] if len(emails) > 0 else None,
-                        email2=emails[1] if len(emails) > 1 else None,
-                        email3=emails[2] if len(emails) > 2 else None,
-                    )
+                    email = contact.get('value')
+            # skip if email does't specified
+            if email is None:
+                continue
+            rubrics = [r.get('name') for r in item.get('rubrics', [])]
+            name = item.get('name')
+            address = item.get('address_name')
+            fingerprint = f'{name}#{address}'
+            if fingerprint not in self.fingerprints:
+                self.fingerprints.add(fingerprint)
+                point = item.get('point', {})
+                point = point if point is not None else {}
+                yield OrgItem(
+                    name=name,
+                    address=address,
+                    lat=point.get('lat'),
+                    lon=point.get('lon'),
+                    email=email,
+                    rubrics=json.dumps(rubrics, ensure_ascii=False)
+                )

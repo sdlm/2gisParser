@@ -19,5 +19,4 @@ class OrgItem(scrapy.Item):
     lat = scrapy.Field()
     lon = scrapy.Field()
     email = scrapy.Field()
-    email2 = scrapy.Field()
-    email3 = scrapy.Field()
+    rubrics = scrapy.Field()

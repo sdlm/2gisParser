@@ -154,3 +154,4 @@ venv.bak/
 
 .idea
 gis/*.json
+gis/*.xlsx
