@@ -1,4 +1,5 @@
 import json
+import re
 
 from scrapy import Spider, Request
 from gis.items import OrgItem
@@ -14,13 +15,16 @@ CAT_URL_TEMPLATE = 'https://catalog.api.2gis.ru/3.0/rubricator/list' \
 
 # noinspection SpellCheckingInspection
 ORG_URL_TEMPLATE = 'https://catalog.api.2gis.ru/2.0/catalog/branch/list' \
-                   '?page=1' \
+                   '?page={page}' \
                    '&page_size=50' \
                    '&rubric_id={rubric_id}' \
                    '&region_id={region_id}' \
                    '&locale=ru_RU' \
                    '&fields=items.contact_groups%2Citems.rubrics%2Citems.point' \
                    '&key=rutnpt3272'
+
+page_regex = r"page=([\d]+)"
+rubric_regex = r"rubric_id=([\d]+)"
 
 
 class OrganizationsSpider(Spider):
@@ -48,13 +52,22 @@ class OrganizationsSpider(Spider):
             name = item.get('name')
             if uid is not None and name is not None:
                 yield Request(url=CAT_URL_TEMPLATE.format(parent_id=uid, region_id=self.region_id))
-                yield Request(url=ORG_URL_TEMPLATE.format(rubric_id=uid, region_id=self.region_id),
+                yield Request(url=ORG_URL_TEMPLATE.format(rubric_id=uid, region_id=self.region_id, page=1),
                               callback=self.parse_category)
 
     def parse_category(self, response):
         data = json.loads(response.text)
         if data['meta']['code'] == 404:
             return
+
+        # get next page
+        url = response.request.url
+        page = int(re.findall(page_regex, url)[0])
+        rubric_id = int(re.findall(rubric_regex, url)[0])
+        if len(data['result']['items']) > 0:
+            yield Request(url=ORG_URL_TEMPLATE.format(rubric_id=rubric_id, region_id=self.region_id, page=page + 1),
+                          callback=self.parse_category)
+
         for item in data['result']['items']:
             email = None
             if len(item.get('contact_groups', [])) == 0:
