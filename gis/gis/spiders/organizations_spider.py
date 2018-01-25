@@ -1,5 +1,6 @@
 import json
 import re
+import traceback
 
 from scrapy import Spider, Request
 from gis.items import OrgItem
@@ -27,6 +28,23 @@ page_regex = r"page=([\d]+)"
 rubric_regex = r"rubric_id=([\d]+)"
 
 
+def safe_func(func):
+
+    def wrapped_func(*arg, **kwargs):
+        try:
+            return func(*arg, **kwargs)
+        except Exception as e:
+            print('- ' * 50)
+            print('- ' * 50)
+            print('- ' * 50)
+            traceback.print_exc()
+            print('- ' * 50)
+            print('- ' * 50)
+            print('- ' * 50)
+
+    return wrapped_func
+
+
 class OrganizationsSpider(Spider):
     name = 'organizations'
 
@@ -43,27 +61,31 @@ class OrganizationsSpider(Spider):
         self.region_id = region_id
         self.start_urls = [START_URL_TEMPLATE.format(region_id=region_id)]
 
+    @safe_func
     def parse(self, response):
         data = json.loads(response.text)
-        if data['meta']['code'] == 404:
+        if data['meta']['code'] in [404, 400]:
             return
         for item in data['result']['items']:
             uid = item.get('id')
-            name = item.get('name')
-            if uid is not None and name is not None:
-                yield Request(url=CAT_URL_TEMPLATE.format(parent_id=uid, region_id=self.region_id))
-                yield Request(url=ORG_URL_TEMPLATE.format(rubric_id=uid, region_id=self.region_id, page=1),
-                              callback=self.parse_category)
+            if uid:
+                for mod in range(-1, 2):
+                    uid_mod = int(uid) + mod
+                    yield Request(url=CAT_URL_TEMPLATE.format(parent_id=uid_mod, region_id=self.region_id))
+                    yield Request(url=ORG_URL_TEMPLATE.format(rubric_id=uid_mod, region_id=self.region_id, page=1),
+                                  callback=self.parse_category)
 
+    @safe_func
     def parse_category(self, response):
         data = json.loads(response.text)
-        if data['meta']['code'] == 404:
+        if data['meta']['code'] in [404, 400]:
             return
 
         # get next page
         url = response.request.url
         page = int(re.findall(page_regex, url)[0])
         rubric_id = int(re.findall(rubric_regex, url)[0])
+
         if len(data['result']['items']) > 0:
             yield Request(url=ORG_URL_TEMPLATE.format(rubric_id=rubric_id, region_id=self.region_id, page=page + 1),
                           callback=self.parse_category)
