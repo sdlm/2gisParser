@@ -37,8 +37,8 @@ if __name__ == '__main__':
     elif options.filename:
         convert_json_to_xlsx(options.filename)
     else:
-        print('''Usage: drop_dub.py [options]
-    Options:
-      -h, --help            show this help message and exit
-      -f FILE, --file=FILE  input/output file
-    ''')
+        print('''Usage: json_to_xlsx.py [options]
+Options:
+  -h, --help            show this help message and exit
+  -f FILE, --file=FILE  input/output file
+''')
