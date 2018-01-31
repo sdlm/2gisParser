@@ -11,6 +11,8 @@ import scrapy
 class CatItem(scrapy.Item):
     id = scrapy.Field(serializer=int)
     name = scrapy.Field()
+    is_metarubric = scrapy.Field(serializer=bool)
+    region = scrapy.Field(serializer=int)
 
 
 class OrgItem(scrapy.Item):
@@ -20,3 +22,4 @@ class OrgItem(scrapy.Item):
     lon = scrapy.Field()
     email = scrapy.Field()
     rubrics = scrapy.Field()
+    region = scrapy.Field(serializer=int)

@@ -9,6 +9,9 @@ def convert_json_to_xlsx(filename):
     with open(filename) as file:
         data = json.loads(file.read())
 
+    # erase categories
+    data = filter(lambda x: 'address' in x, data)
+
     # Create an new Excel file and add a worksheet.
     workbook = xlsxwriter.Workbook('Excel.xlsx')
     worksheet = workbook.add_worksheet()

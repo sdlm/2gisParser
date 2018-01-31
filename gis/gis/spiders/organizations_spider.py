@@ -3,8 +3,7 @@ import re
 import traceback
 
 from scrapy import Spider, Request
-from gis.items import OrgItem
-
+from gis.items import OrgItem, CatItem
 
 # noinspection SpellCheckingInspection
 START_URL_TEMPLATE = 'https://catalog.api.2gis.ru/3.0/rubricator/list' \
@@ -67,13 +66,23 @@ class OrganizationsSpider(Spider):
         if data['meta']['code'] in [404, 400]:
             return
         for item in data['result']['items']:
-            uid = item.get('id')
-            if uid:
+            cat = CatItem(
+                id=int(item.get('id')),
+                name=item.get('name'),
+                is_metarubric=item.get('type') == 'metarubric',
+                region=self.region_id
+            )
+
+            if cat['is_metarubric']:
                 for mod in range(-1, 2):
-                    uid_mod = int(uid) + mod
+                    uid_mod = cat['id'] + mod
                     yield Request(url=CAT_URL_TEMPLATE.format(parent_id=uid_mod, region_id=self.region_id))
-                    yield Request(url=ORG_URL_TEMPLATE.format(rubric_id=uid_mod, region_id=self.region_id, page=1),
-                                  callback=self.parse_category)
+
+            else:
+                yield Request(url=ORG_URL_TEMPLATE.format(rubric_id=cat['id'], region_id=self.region_id, page=1),
+                              callback=self.parse_category)
+
+            yield cat
 
     @safe_func
     def parse_category(self, response):
@@ -114,5 +123,6 @@ class OrganizationsSpider(Spider):
                     lat=point.get('lat'),
                     lon=point.get('lon'),
                     email=email,
-                    rubrics=json.dumps(rubrics, ensure_ascii=False)
+                    rubrics=json.dumps(rubrics, ensure_ascii=False),
+                    region=self.region_id
                 )
