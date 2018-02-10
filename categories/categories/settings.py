@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Scrapy settings for gis project
+# Scrapy settings for categories project
 #
 # For simplicity, this file contains only settings considered important or
 # commonly used. You can find more settings consulting the documentation:
@@ -9,14 +9,14 @@
 #     https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 
-BOT_NAME = 'gis'
+BOT_NAME = 'categories'
 
-SPIDER_MODULES = ['gis.spiders']
-NEWSPIDER_MODULE = 'gis.spiders'
+SPIDER_MODULES = ['categories.spiders']
+NEWSPIDER_MODULE = 'categories.spiders'
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-#USER_AGENT = 'gis (+http://www.yourdomain.com)'
+#USER_AGENT = 'categories (+http://www.yourdomain.com)'
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = False
@@ -47,13 +47,13 @@ ROBOTSTXT_OBEY = False
 # Enable or disable spider middlewares
 # See https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 #SPIDER_MIDDLEWARES = {
-#    'gis.middlewares.GisSpiderMiddleware': 543,
+#    'categories.middlewares.CategoriesSpiderMiddleware': 543,
 #}
 
 # Enable or disable downloader middlewares
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 #DOWNLOADER_MIDDLEWARES = {
-#    'gis.middlewares.GisDownloaderMiddleware': 543,
+#    'categories.middlewares.CategoriesDownloaderMiddleware': 543,
 #}
 
 # Enable or disable extensions
@@ -65,7 +65,8 @@ ROBOTSTXT_OBEY = False
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-   'gis.pipelines.GisPipeline': 300,
+   'categories.pipelines.CategoriesPipeline': 300,
+   'categories.pipelines.MongoPipeline': 900,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
@@ -90,3 +91,24 @@ ITEM_PIPELINES = {
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 
 FEED_EXPORT_ENCODING = 'utf-8'
+
+MONGO_URI = 'mongodb://localhost'
+MONGO_DATABASE = 'gis_db'
+
+# noinspection SpellCheckingInspection
+START_URL_TEMPLATE = 'https://catalog.api.2gis.ru/3.0/rubricator/list' \
+                     '?locale=ru_RU&region_id={region_id}&key=rutnpt3272'
+
+# noinspection SpellCheckingInspection
+CAT_URL_TEMPLATE = 'https://catalog.api.2gis.ru/3.0/rubricator/list' \
+                   '?parent_id={parent_id}&locale=ru_RU&region_id={region_id}&key=rutnpt3272'
+
+# noinspection SpellCheckingInspection
+ORG_URL_TEMPLATE = 'https://catalog.api.2gis.ru/2.0/catalog/branch/list' \
+                   '?page={page}' \
+                   '&page_size=50' \
+                   '&rubric_id={rubric_id}' \
+                   '&region_id={region_id}' \
+                   '&locale=ru_RU' \
+                   '&fields=items.contact_groups%2Citems.rubrics%2Citems.point' \
+                   '&key=rutnpt3272'
