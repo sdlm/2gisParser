@@ -47,7 +47,7 @@ def safe_func(func):
 class OrganizationsSpider(Spider):
     name = 'organizations'
 
-    def __init__(self, region_id=None, *arg, **kwargs):
+    def __init__(self, region_id=None, is_cat_grabber=None, *arg, **kwargs):
         super().__init__(*arg, **kwargs)
         self.fingerprints = set()
 
@@ -59,6 +59,7 @@ class OrganizationsSpider(Spider):
             raise Exception('argument region_id is required!')
         self.region_id = region_id
         self.start_urls = [START_URL_TEMPLATE.format(region_id=region_id)]
+        self.is_cat_grabber = is_cat_grabber is True
 
     @safe_func
     def parse(self, response):
@@ -67,6 +68,7 @@ class OrganizationsSpider(Spider):
             return
         for item in data['result']['items']:
             cat = CatItem(
+                type='category',
                 id=int(item.get('id')),
                 name=item.get('name'),
                 is_metarubric=item.get('type') == 'metarubric',
@@ -79,8 +81,9 @@ class OrganizationsSpider(Spider):
                     yield Request(url=CAT_URL_TEMPLATE.format(parent_id=uid_mod, region_id=self.region_id))
 
             else:
-                yield Request(url=ORG_URL_TEMPLATE.format(rubric_id=cat['id'], region_id=self.region_id, page=1),
-                              callback=self.parse_category)
+                if not self.is_cat_grabber:
+                    yield Request(url=ORG_URL_TEMPLATE.format(rubric_id=cat['id'], region_id=self.region_id, page=1),
+                                  callback=self.parse_category)
 
             yield cat
 
@@ -118,6 +121,7 @@ class OrganizationsSpider(Spider):
                 point = item.get('point', {})
                 point = point if point is not None else {}
                 yield OrgItem(
+                    type='item',
                     name=name,
                     address=address,
                     lat=point.get('lat'),

@@ -12,13 +12,19 @@ if __name__ == '__main__':
 
     parser = OptionParser()
     parser.add_option('-r', '--region', dest='region', help='scraping data for region', metavar='INT')
+    parser.add_option('-c', '--categories',
+                      action='store_true', dest='is_cat_grabber', default=False,
+                      help='scraping only categories')
 
     (options, args) = parser.parse_args()
 
     try:
         # getter
         assert options.region
-        regions = json.loads(f'[{options.region}]')
+        if options.region == 'all':
+            regions = list(range(1, 8))
+        else:
+            regions = json.loads(f'[{options.region}]')
 
         # validation
         assert isinstance(regions, list)
@@ -42,5 +48,5 @@ Options:
         }
         process = CrawlerProcess(config)
         for i in regions:
-            process.crawl(OrganizationsSpider, region_id=i)
+            process.crawl(OrganizationsSpider, region_id=i, is_cat_grabber=options.is_cat_grabber)
         process.start()

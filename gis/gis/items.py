@@ -9,6 +9,7 @@ import scrapy
 
 
 class CatItem(scrapy.Item):
+    type = scrapy.Field()
     id = scrapy.Field(serializer=int)
     name = scrapy.Field()
     is_metarubric = scrapy.Field(serializer=bool)
@@ -16,6 +17,7 @@ class CatItem(scrapy.Item):
 
 
 class OrgItem(scrapy.Item):
+    type = scrapy.Field()
     name = scrapy.Field()
     address = scrapy.Field()
     lat = scrapy.Field()
